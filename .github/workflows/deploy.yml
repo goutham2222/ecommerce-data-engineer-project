@@ -1,0 +1,43 @@
+name: Deploy Lambda and Glue
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
+
+    - name: Zip Lambda code
+      run: |
+        zip -r lambda.zip lambda/
+
+    - name: Deploy Lambda function
+      run: |
+        aws lambda update-function-code --function-name storeEcommerceEvent --zip-file fileb://lambda.zip --publish
+
+    - name: Upload Glue script to S3
+      run: |
+        aws s3 cp glue/glue_script.py s3://aws-glue-assets-277707101844-us-west-2/scripts/ecommerce-event-transform.py
+
+    - name: Update Glue Job
+      run: |
+        aws glue update-job --job-name ecommerce-event-transform --job-update '{
+          "Command": {
+            "Name": "glueetl",
+            "ScriptLocation": "s3://aws-glue-assets-277707101844-us-west-2/scripts/ecommerce-event-transform.py",
+            "PythonVersion": "3"
+          }
+        }'
