@@ -26,18 +26,27 @@ jobs:
 
     - name: Deploy Lambda function
       run: |
-        aws lambda update-function-code --function-name storeEcommerceEvent --zip-file fileb://lambda.zip --publish
+        aws lambda update-function-code \
+          --function-name storeEcommerceEvent \
+          --zip-file fileb://lambda.zip \
+          --publish
 
     - name: Upload Glue script to S3
       run: |
-        aws s3 cp glue/ecommerce-event-transform.py s3://aws-glue-assets-277707101844-us-west-2/scripts/ecommerce-event-transform.py
+        aws s3 cp glue/ecommerce-event-transform.py \
+          s3://aws-glue-assets-277707101844-us-west-2/scripts/ecommerce-event-transform.py
 
     - name: Update Glue Job
       run: |
-        aws glue update-job --job-name ecommerce-event-transform --job-update '{
-          "Command": {
-            "Name": "glueetl",
-            "ScriptLocation": "s3://aws-glue-assets-277707101844-us-west-2/scripts/ecommerce-event-transform.py",
-            "PythonVersion": "3"
-          }
-        }'
+        aws glue update-job \
+          --job-name ecommerce-event-transform \
+          --job-update '{
+            "Role": "arn:aws:iam::277707101844:role/AWSGlueServiceRole-EcommercePipeline",
+            "Command": {
+              "Name": "glueetl",
+              "ScriptLocation": "s3://aws-glue-assets-277707101844-us-west-2/scripts/ecommerce-event-transform.py",
+              "PythonVersion": "3"
+            },
+            "GlueVersion": "3.0",
+            "MaxCapacity": 2
+          }'
