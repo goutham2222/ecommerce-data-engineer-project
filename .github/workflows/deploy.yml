@@ -20,14 +20,22 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-2
 
-    - name: Zip Lambda code
+    - name: Zip all Lambda functions
       run: |
-        zip -r lambda.zip lambda/
+        cd lambda
+        zip -r ../lambda.zip .
 
-    - name: Deploy Lambda function
+    - name: Deploy storeEcommerceEvent Lambda
       run: |
         aws lambda update-function-code \
           --function-name storeEcommerceEvent \
+          --zip-file fileb://lambda.zip \
+          --publish
+
+    - name: Deploy fetchProductsFromDummyAPI Lambda
+      run: |
+        aws lambda update-function-code \
+          --function-name fetchProductsFromDummyAPI \
           --zip-file fileb://lambda.zip \
           --publish
 
