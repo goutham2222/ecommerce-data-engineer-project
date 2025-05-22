@@ -20,31 +20,35 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-2
 
-    # --- LAMBDA: storeEcommerceEvent ---
+    # --- Lambda: storeEcommerceEvent ---
     - name: Zip storeEcommerceEvent Lambda
       run: |
-        zip -j store_ecommerce_event.zip lambda/lambda_function.py
+        cd lambda
+        zip ../storeEcommerceEvent.zip lambda_function.py
+        cd ..
 
     - name: Deploy storeEcommerceEvent Lambda function
       run: |
         aws lambda update-function-code \
           --function-name storeEcommerceEvent \
-          --zip-file fileb://store_ecommerce_event.zip \
+          --zip-file fileb://storeEcommerceEvent.zip \
           --publish
 
-    # --- LAMBDA: fetchProductsFunction ---
-    - name: Zip fetchProductsFromDummyAPI Lambda
+    # --- Lambda: fetchProductsFromDummyAPI ---
+    - name: Zip fetchProductsFunction Lambda
       run: |
-        zip -j fetch_products.zip lambda/fetch_products.py
+        cd lambda
+        zip ../fetchProductsFunction.zip fetch_products.py
+        cd ..
 
-    - name: Deploy fetchProductsFromDummyAPI Lambda function
+    - name: Deploy fetchProductsFunction Lambda function
       run: |
         aws lambda update-function-code \
           --function-name fetchProductsFromDummyAPI \
-          --zip-file fileb://fetch_products.zip \
+          --zip-file fileb://fetchProductsFunction.zip \
           --publish
 
-    # --- GLUE SCRIPT ---
+    # --- Glue Script Upload ---
     - name: Upload Glue script to S3
       run: |
         aws s3 cp glue/ecommerce-event-transform.py \
@@ -64,4 +68,3 @@ jobs:
             "GlueVersion": "3.0",
             "MaxCapacity": 2
           }'
-
